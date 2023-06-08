@@ -8,6 +8,7 @@ import os
 
 class ProclaimAPI:
     _ipAddress = ''
+    _passcode = ''
    #  _changeDirection = 'next'
     def __new__(cls, *args, **kwargs):
         print("1. Create a new instance of ProclaimAPI.")
@@ -15,13 +16,15 @@ class ProclaimAPI:
 
     def __init__(self, x):
         print("2. Initialize the new instance of ProclaimAPI.")
-        self.Method = x
 
+        self.Method = x
         config = app.read_config()
-        os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
         self._ipAddress = config['Proclaim_API_Settings']['IP_Address']
+        self._passcode = config['Proclaim_API_Settings']['passcode']
+        os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
         self._performAction()
 
 
@@ -49,8 +52,9 @@ class ProclaimAPI:
             print("authenticate")
             url = f'http://{self._ipAddress}/appCommand/authenticate'
             print(self._ipAddress)
-
-            payload = "{\n\n\"Password\" : \"tbud0906\"\n\n}"
+            # payload = "{\n\n\"Password\" : \"tbud0906\"\n\n}"
+            payload = "{\n\n\"Password\" : \"" + f"{self._passcode}" + "\"\n\n}"
+            # print(f"payload {payload}")
             headers = {
                 'Content-Type': 'text/plain'
             }
