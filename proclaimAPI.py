@@ -1,0 +1,86 @@
+from Base import app
+
+import requests
+import json
+import pickle
+import os
+
+
+class ProclaimAPI:
+    _ipAddress = ''
+   #  _changeDirection = 'next'
+    def __new__(cls, *args, **kwargs):
+        print("1. Create a new instance of ProclaimAPI.")
+        return super().__new__(cls)
+
+    def __init__(self, x):
+        print("2. Initialize the new instance of ProclaimAPI.")
+        self.Method = x
+
+        config = app.read_config()
+        os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+
+        self._ipAddress = config['Proclaim_API_Settings']['IP_Address']
+        self._performAction()
+
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(method={self.Method})"
+
+    def _performAction(self):
+        print(self.Method)
+
+        match self.Method:
+            case app.ProclaimAction.Authenticate:
+                print("proclaim authenticate")
+                self._authenticate()
+            case app.ProclaimAction.NextSlide:
+                print("next slide")
+                self._changeSlide('next')
+            case app.ProclaimAction.PreviousSlide:
+                print("previous slide")
+                self._changeSlide('previous')
+              #  self._previouSlide()
+
+
+
+    def _authenticate(self):
+            print("authenticate")
+            url = f'http://{self._ipAddress}/appCommand/authenticate'
+            print(self._ipAddress)
+
+            payload = "{\n\n\"Password\" : \"tbud0906\"\n\n}"
+            headers = {
+                'Content-Type': 'text/plain'
+            }
+
+            response = requests.request("POST", url, headers=headers, data=payload)
+            json_object = json.loads(response.text.encode().decode('utf-8-sig'))
+
+            accessToken = json_object["proclaimAuthToken"]
+            pickleFile = open('authfile', 'wb')
+            pickle.dump(accessToken, pickleFile)
+            print(json_object["proclaimAuthToken"])
+
+            pickleFile.close()
+            print(response.text)
+
+    def _changeSlide(self, direction):
+        url = f"http://{self._ipAddress}/appCommand/perform?appCommandName={direction}Slide"
+
+        payload = ''
+
+        pickleFile = open('authfile', 'rb')
+        accessToken = pickle.load(pickleFile)
+
+        headers = {
+            'ProclaimAuthToken': accessToken
+        }
+
+        response = requests.request("GET", url, headers=headers, data=payload)
+
+        print(response.text)
+        pickleFile.close()
+
+
