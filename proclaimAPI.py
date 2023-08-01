@@ -1,3 +1,5 @@
+import requests.exceptions
+
 from Base import app
 
 import requests
@@ -9,7 +11,8 @@ import os
 class ProclaimAPI:
     _ipAddress = ''
     _passcode = ''
-   #  _changeDirection = 'next'
+
+    #  _changeDirection = 'next'
     def __new__(cls, *args, **kwargs):
         print("1. Create a new instance of ProclaimAPI.")
         return super().__new__(cls)
@@ -20,13 +23,11 @@ class ProclaimAPI:
         self.Method = x
         config = app.read_config()
 
-
         self._ipAddress = config['Proclaim_API_Settings']['IP_Address']
         self._passcode = config['Proclaim_API_Settings']['passcode']
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
         self._performAction()
-
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(method={self.Method})"
@@ -44,31 +45,37 @@ class ProclaimAPI:
             case app.ProclaimAction.PreviousSlide:
                 print("previous slide")
                 self._changeSlide('previous')
-              #  self._previouSlide()
-
-
 
     def _authenticate(self):
-            print("authenticate")
-            url = f'http://{self._ipAddress}/appCommand/authenticate'
-            print(self._ipAddress)
-            # payload = "{\n\n\"Password\" : \"tbud0906\"\n\n}"
-            payload = "{\n\n\"Password\" : \"" + f"{self._passcode}" + "\"\n\n}"
-            # print(f"payload {payload}")
-            headers = {
-                'Content-Type': 'text/plain'
-            }
+        print("authenticate")
+        url = f'http://{self._ipAddress}/appCommand/authenticate'
+        print(self._ipAddress)
+        # payload = "{\n\n\"Password\" : \"tbud0906\"\n\n}"
+        payload = "{\n\n\"Password\" : \"" + f"{self._passcode}" + "\"\n\n}"
+        # print(f"payload {payload}")
+        headers = {
+            'Content-Type': 'text/plain'
+        }
 
+        try:
             response = requests.request("POST", url, headers=headers, data=payload)
-            json_object = json.loads(response.text.encode().decode('utf-8-sig'))
+        except requests.exceptions.HTTPError as err:
+            raise SystemExit(err)
+        except requests.exceptions.Timeout as e:
+            print("request time out");
+            raise SystemExit(e);
+        except requests.exceptions.RequestsWarning as e:
+            raise SystemExit(e)
 
-            accessToken = json_object["proclaimAuthToken"]
-            pickleFile = open('authfile', 'wb')
-            pickle.dump(accessToken, pickleFile)
-            print(json_object["proclaimAuthToken"])
+        json_object = json.loads(response.text.encode().decode('utf-8-sig'))
 
-            pickleFile.close()
-            print(response.text)
+        accessToken = json_object["proclaimAuthToken"]
+        pickleFile = open('authfile', 'wb')
+        pickle.dump(accessToken, pickleFile)
+        print(json_object["proclaimAuthToken"])
+
+        pickleFile.close()
+        print(response.text)
 
     def _changeSlide(self, direction):
         url = f"http://{self._ipAddress}/appCommand/perform?appCommandName={direction}Slide"
@@ -86,5 +93,3 @@ class ProclaimAPI:
 
         print(response.text)
         pickleFile.close()
-
-
