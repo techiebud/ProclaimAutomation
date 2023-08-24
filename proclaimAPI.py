@@ -57,25 +57,28 @@ class ProclaimAPI:
             'Content-Type': 'text/plain'
         }
 
+        # noinspection PyBroadException
         try:
             response = requests.request("POST", url, headers=headers, data=payload)
         except requests.exceptions.HTTPError as err:
-            raise SystemExit(err)
+            print("HTTP Error")
         except requests.exceptions.Timeout as e:
-            print("request time out");
-            raise SystemExit(e);
+            print("Request Time Out")
         except requests.exceptions.RequestsWarning as e:
-            raise SystemExit(e)
+            print("Request Warning")
+        except:
+            print("Unable to execute Proclaim API all")
+        else:
 
-        json_object = json.loads(response.text.encode().decode('utf-8-sig'))
+            json_object = json.loads(response.text.encode().decode('utf-8-sig'))
 
-        accessToken = json_object["proclaimAuthToken"]
-        pickleFile = open('authfile', 'wb')
-        pickle.dump(accessToken, pickleFile)
-        print(json_object["proclaimAuthToken"])
+            accessToken = json_object["proclaimAuthToken"]
+            pickleFile = open('authfile', 'wb')
+            pickle.dump(accessToken, pickleFile)
+            print(json_object["proclaimAuthToken"])
 
-        pickleFile.close()
-        print(response.text)
+            pickleFile.close()
+            print(response.text)
 
     def _changeSlide(self, direction):
         url = f"http://{self._ipAddress}/appCommand/perform?appCommandName={direction}Slide"
