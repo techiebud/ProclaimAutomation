@@ -62,12 +62,16 @@ class ProclaimAPI:
             response = requests.request("POST", url, headers=headers, data=payload)
         except requests.exceptions.HTTPError as err:
             print("HTTP Error")
+            input("Press Enter to continue...")
         except requests.exceptions.Timeout as e:
             print("Request Time Out")
+            input("Press Enter to continue...")
         except requests.exceptions.RequestsWarning as e:
             print("Request Warning")
+            input("Press Enter to continue...")
         except:
             print("Unable to execute Proclaim API all")
+            input("Press Enter to continue...")
         else:
 
             json_object = json.loads(response.text.encode().decode('utf-8-sig'))
