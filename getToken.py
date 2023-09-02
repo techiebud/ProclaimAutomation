@@ -4,5 +4,3 @@ from proclaimAPI import ProclaimAPI
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 ProclaimAPI(app.ProclaimAction.Authenticate)
-
-

@@ -6,6 +6,9 @@ import requests
 import json
 import pickle
 import os
+import platform
+import subprocess
+import sys
 
 
 class ProclaimAPI:
@@ -18,16 +21,24 @@ class ProclaimAPI:
         return super().__new__(cls)
 
     def __init__(self, x):
+        sys.tracebacklimit = 0
         print("2. Initialize the new instance of ProclaimAPI.")
 
         self.Method = x
         config = app.read_config()
 
         self._ipAddress = config['Proclaim_API_Settings']['IP_Address']
-        self._passcode = config['Proclaim_API_Settings']['passcode']
-        os.chdir(os.path.dirname(os.path.abspath(__file__)))
+        ipAddress = self._ipAddress
+        print(f"IP Address: {ipAddress}")
+        if self._ping(ipAddress):                
+                
+            self._passcode = config['Proclaim_API_Settings']['passcode']
+            os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-        self._performAction()
+            self._performAction()
+        else: 
+            print(f"Unable to reach {self._ipAddress}")
+            input("Press Enter to continue...")
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(method={self.Method})"
@@ -60,15 +71,18 @@ class ProclaimAPI:
         # noinspection PyBroadException
         try:
             response = requests.request("POST", url, headers=headers, data=payload)
-        except requests.exceptions.HTTPError as err:
-            print("HTTP Error")
-            input("Press Enter to continue...")
-        except requests.exceptions.Timeout as e:
-            print("Request Time Out")
-            input("Press Enter to continue...")
-        except requests.exceptions.RequestsWarning as e:
-            print("Request Warning")
-            input("Press Enter to continue...")
+        except requests.exceptions.RequestException as e:
+             print("An error occurred:", e)
+             return None
+        # except requests.exceptions.HTTPError as err:
+        #     print("HTTP Error")
+        #     input("Press Enter to continue...")
+        # except requests.exceptions.Timeout as e:
+        #     print("Request Time Out")
+        #     input("Press Enter to continue...")
+        # except requests.exceptions.RequestsWarning as e:
+        #     print("Request Warning")
+        #     input("Press Enter to continue...")
         except:
             print("Unable to execute Proclaim API all")
             input("Press Enter to continue...")
@@ -100,3 +114,18 @@ class ProclaimAPI:
 
         print(response.text)
         pickleFile.close()
+
+
+    def _ping(self, host):
+        """
+        Returns True if host (str) responds to a ping request.
+        Remember that a host may not respond to a ping (ICMP) request even if the host name is valid.
+        """
+
+        # Option for the number of packets as a function of
+        param = '-n' if platform.system().lower()=='windows' else '-c'
+
+        # Building the command. Ex: "ping -c 1 google.com"
+        command = ['ping', param, '1', host]
+
+        return subprocess.call(command) == 0
